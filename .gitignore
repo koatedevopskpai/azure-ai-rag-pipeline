@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+*.whl
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Terraform
+infra/.terraform/
+infra/terraform.tfstate*
+infra/*.plan
+
+# Docker
+.env.example
