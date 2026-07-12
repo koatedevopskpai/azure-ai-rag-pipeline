@@ -1,0 +1,53 @@
+# Architecture decision: NGINX Ingress Controller over Azure Application Gateway.
+# Why: NGINX Ingress is the most widely adopted K8s ingress controller, works
+# across any cloud provider (not just Azure), and has extensive documentation
+# for rate limiting, CORS, and WebSocket/SSE support. Application Gateway is
+# Azure-specific and adds cost even when idle.
+#
+# Architecture decision: Annotations for SSE compatibility.
+# Why: SSE streams hold connections open for the duration of generation.
+# Without proxy-buffering: "off", NGINX buffers the entire stream in memory
+# before sending it to the client, which defeats the purpose of streaming.
+# The proxy-read-timeout of 300s allows the LLM up to 5 minutes to generate
+# a response before NGINX terminates the connection.
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: azure-ai-rag-pipeline
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  rules:
+    - host: api.rag-pipeline.example.com
+      http:
+        paths:
+          - path: /api/v1
+            pathType: Prefix
+            backend:
+              service:
+                name: azure-ai-rag-pipeline
+                port:
+                  number: 80
+          - path: /health
+            pathType: Exact
+            backend:
+              service:
+                name: azure-ai-rag-pipeline
+                port:
+                  number: 80
+          - path: /docs
+            pathType: Prefix
+            backend:
+              service:
+                name: azure-ai-rag-pipeline
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - api.rag-pipeline.example.com
+      secretName: rag-pipeline-tls

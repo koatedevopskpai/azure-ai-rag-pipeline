@@ -1,0 +1,23 @@
+# Architecture decision: Exclude local dev artefacts from Docker context.
+# Why: Sending .git, __pycache__, and .env to the Docker daemon slows
+# builds, enlarges the image, and risks leaking secrets.
+
+.git
+.gitignore
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/
+env/
+*.whl
+.env
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+.dockerignore

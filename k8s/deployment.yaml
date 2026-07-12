@@ -1,0 +1,132 @@
+# Architecture decision: K8s manifests over Helm charts.
+# Why: Helm adds a package management layer (charts, repositories,
+# templating) that is valuable for deploying the same application to
+# multiple environments with different configurations. For a portfolio
+# project with one deployment target (AKS), raw K8s manifests are more
+# transparent — every resource definition is visible in a single YAML
+# file. The Helm chart can be added later when the project is deployed
+# to staging and production environments.
+#
+# Architecture decision: Readiness and liveness probes on the same
+# endpoint (/health) but with different thresholds.
+# Why: The /health endpoint checks Azure AI Search connectivity. The
+# liveness probe (failureThreshold=3) is more lenient — temporary
+# network blips should not kill the pod. The readiness probe
+# (failureThreshold=1) is stricter — if the pod cannot reach Azure
+# Search, it should not receive traffic.
+#
+# Architecture decision: Resource requests and limits set explicitly.
+# Why: Without resource limits, a memory leak in the RAG pipeline could
+# consume all node resources and crash other pods. The limits reflect
+# the typical memory usage of the Python RAG process (~200MB RSS) plus
+# headroom for spikes during document ingestion.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: azure-ai-rag-pipeline
+  labels:
+    app: azure-ai-rag-pipeline
+    component: api
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: azure-ai-rag-pipeline
+  template:
+    metadata:
+      labels:
+        app: azure-ai-rag-pipeline
+    spec:
+      # Architecture decision: Azure Workload Identity for pod authentication.
+      # Why: Managed identity on AKS eliminates API key management. The pod
+      # assumes an Azure AD identity via the service account, which has
+      # RBAC permissions on Key Vault and Azure AI services. No secrets
+      # are stored in the pod or ConfigMap.
+      serviceAccountName: azure-ai-rag-pipeline-sa
+      containers:
+        - name: api
+          image: ghcr.io/koate-kpai/azure-ai-rag-pipeline:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+          env:
+            - name: APP_ENV
+              value: "production"
+            - name: APP_LOG_LEVEL
+              value: "INFO"
+            - name: AZURE_OPENAI_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: azure-ai-rag-secrets
+                  key: openai-endpoint
+            - name: AZURE_OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: azure-ai-rag-secrets
+                  key: openai-api-key
+            - name: AZURE_SEARCH_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: azure-ai-rag-secrets
+                  key: search-endpoint
+            - name: AZURE_SEARCH_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: azure-ai-rag-secrets
+                  key: search-api-key
+            - name: AZURE_DOC_INTELLIGENCE_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: azure-ai-rag-secrets
+                  key: doc-intelligence-endpoint
+            - name: AZURE_DOC_INTELLIGENCE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: azure-ai-rag-secrets
+                  key: doc-intelligence-api-key
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: azure-ai-rag-pipeline
+  labels:
+    app: azure-ai-rag-pipeline
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 8000
+      protocol: TCP
+      name: http
+  selector:
+    app: azure-ai-rag-pipeline
