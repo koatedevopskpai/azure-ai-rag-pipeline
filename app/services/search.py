@@ -19,6 +19,7 @@ fetching the full content, reducing response size and latency. The content
 field is configured for semantic search (max 32K chars) and the metadata
 is stored as a searchable collection.
 """
+
 from __future__ import annotations
 
 import json
@@ -37,28 +38,20 @@ from azure.search.documents.indexes.models import (
     SearchField,
     SearchFieldDataType,
     SearchIndex,
-    SimpleField,
-    VectorSearch,
-    VectorSearchAlgorithmKind,
-    VectorSearchProfile,
     SemanticConfiguration,
     SemanticField,
     SemanticPrioritizedFields,
     SemanticSearch,
+    SimpleField,
+    VectorSearch,
+    VectorSearchProfile,
 )
 from azure.search.documents.models import (
-    HybridSearch,
-    QueryAnswer,
-    QueryCaption,
+    QueryAnswerType,
+    QueryCaptionType,
     QueryType,
-    RawVectorQuery,
-    SemanticErrorMode,
-    SemanticQuery,
     VectorizableTextQuery,
-    VectorFilterMode,
-)
-from azure.search.documents.indexes.models import (
-    SemanticConfiguration as SemanticConfig,
+    VectorizedQuery,
 )
 
 from app.config import settings
@@ -270,9 +263,9 @@ def search(
         if not query_vector:
             raise ValueError("query_vector is required for semantic search mode")
         # Pure vector search using the query vector
-        vector_query = RawVectorQuery(
+        vector_query = VectorizedQuery(
             vector=query_vector,
-            k=top_k,
+            k_nearest_neighbors=top_k,
             fields="content_vector",
         )
         results = client.search(
@@ -294,7 +287,7 @@ def search(
         # ("Q3 2024 earnings") where pure vector search often fails.
         vector_query = VectorizableTextQuery(
             text=query,
-            k=top_k,
+            k_nearest_neighbors=top_k,
             fields="content_vector",
         )
         results = client.search(
@@ -305,8 +298,8 @@ def search(
             top=top_k,
             filter=filters,
             include_total_count=True,
-            query_caption=QueryCaption(type="extractive"),
-            query_answer=QueryAnswer(),
+            query_caption=QueryCaptionType.EXTRACTIVE,
+            query_answer=QueryAnswerType.EXTRACTIVE,
         )
     else:
         raise ValueError(f"Unknown retrieval mode: {mode}")
@@ -319,22 +312,28 @@ def search(
         raw_metadata = r.get("metadata")
         if raw_metadata:
             try:
-                metadata = json.loads(raw_metadata) if isinstance(raw_metadata, str) else raw_metadata
+                metadata = (
+                    json.loads(raw_metadata) if isinstance(raw_metadata, str) else raw_metadata
+                )
             except (json.JSONDecodeError, TypeError):
                 metadata = {}
 
-        search_results.append(SearchResult(
-            chunk_id=r.get("chunk_id", ""),
-            document_id=r.get("document_id", ""),
-            content=r.get("content", ""),
-            score=float(r.get("@search.score", 0.0)),
-            metadata=metadata,
-            highlights=list(r.get("@search.captions", [])),
-        ))
+        search_results.append(
+            SearchResult(
+                chunk_id=r.get("chunk_id", ""),
+                document_id=r.get("document_id", ""),
+                content=r.get("content", ""),
+                score=float(r.get("@search.score", 0.0)),
+                metadata=metadata,
+                highlights=list(r.get("@search.captions", [])),
+            )
+        )
 
     logger.debug(
         "Search (%s) returned %d results in %.1fms",
-        mode, len(search_results), elapsed_ms,
+        mode,
+        len(search_results),
+        elapsed_ms,
     )
     return search_results
 

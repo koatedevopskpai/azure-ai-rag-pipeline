@@ -8,6 +8,7 @@ Azure dependencies. API tests test the full FastAPI routing layer with mocked
 Azure clients. This separation means the chunking tests run in CI without
 any Azure credentials, while the API tests validate request/response shape.
 """
+
 from __future__ import annotations
 
 import pytest

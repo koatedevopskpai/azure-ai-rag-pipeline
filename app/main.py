@@ -24,20 +24,18 @@ retry intervals, data framing) that raw StreamingResponse would require
 us to implement manually. It also manages connection lifecycle (clean
 disconnect when the client closes).
 """
+
 from __future__ import annotations
 
 import logging
 import time
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from sse_starlette.sse import EventSourceResponse
 
-from app.config import settings
 from app.api.routes import router as api_router
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -137,8 +135,9 @@ def create_app() -> FastAPI:
         search_status = "unknown"
         try:
             if settings.AZURE_SEARCH_ENDPOINT:
-                from azure.search.documents import SearchClient
                 from azure.core.credentials import AzureKeyCredential
+                from azure.search.documents import SearchClient
+
                 client = SearchClient(
                     endpoint=settings.AZURE_SEARCH_ENDPOINT,
                     index_name=settings.AZURE_SEARCH_INDEX_NAME,

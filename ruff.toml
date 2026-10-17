@@ -1,0 +1,37 @@
+# Pinned ruff configuration.
+#
+# Added 2026-10-17: the repository previously committed no ruff config, so the
+# lint rule set and line length were environment-dependent and the CI result
+# changed between runs (48 errors observed in CI run 38026932044 versus 28 with a
+# pinned modern ruff). An explicit config makes the lint result reproducible.
+#
+# This file is the single source of truth for lint policy. If a rule is removed,
+# say why in the commit message rather than deleting the line silently.
+
+line-length = 100
+target-version = "py312"
+
+[lint]
+# Explicit rule selection rather than relying on ruff's implicit defaults.
+select = [
+    "E4", # pycodestyle: import errors
+    "E7", # pycodestyle: statement errors
+    "E9", # pycodestyle: runtime errors
+    "F",  # pyflakes: unused imports/variables, undefined names
+    "I",  # isort: import ordering
+    "UP", # pyupgrade: deprecated syntax and imports
+]
+
+# UP042 (migrate `class X(str, Enum)` to `enum.StrEnum`) is deliberately not
+# enforced. It changes runtime behaviour: `str(member)` becomes the value rather
+# than "Class.MEMBER", which affects serialisation and comparison in the Pydantic
+# schemas and in `doc.status.value == "failed"` checks. Making that change safely
+# requires running the full suite; it is a follow-up decision, not a lint tidy-up.
+ignore = ["UP042"]
+
+# "B" (flake8-bugbear) is deliberately deferred, not silenced.
+# B904 (raise-without-from), B905 (zip-without-strict) and especially B008
+# (function-call-in-default-argument, which false-positives on FastAPI's
+# Depends()/Query() defaults) need semantic review and behavioural testing
+# before they can be enforced. Tracked as a follow-up task; do not add "B"
+# here until those findings have been reviewed individually.

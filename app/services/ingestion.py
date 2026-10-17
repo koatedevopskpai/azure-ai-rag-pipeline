@@ -17,16 +17,14 @@ Why: UUIDs are globally unique without a central counter, enabling future
 distributed processing where multiple ingestion workers run concurrently.
 Sequential IDs require synchronisation.
 """
+
 from __future__ import annotations
 
 import hashlib
 import logging
 import uuid
-from datetime import datetime
 from pathlib import Path
-from typing import Any
 
-from app.config import settings, UPLOAD_DIR
 from app.models.schemas import (
     ChunkingStrategy,
     Document,
@@ -104,15 +102,17 @@ async def ingest_document(
         doc_chunks = []
         for cd in chunk_dicts:
             chunk_id = f"{document_id}-chunk-{cd['chunk_index']:04d}"
-            doc_chunks.append(DocumentChunk(
-                id=chunk_id,
-                document_id=document_id,
-                content=cd["content"],
-                chunk_index=cd["chunk_index"],
-                strategy=cd["strategy"],
-                parent_chunk_id=cd.get("parent_chunk_id"),
-                level=cd.get("level", 0),
-            ))
+            doc_chunks.append(
+                DocumentChunk(
+                    id=chunk_id,
+                    document_id=document_id,
+                    content=cd["content"],
+                    chunk_index=cd["chunk_index"],
+                    strategy=cd["strategy"],
+                    parent_chunk_id=cd.get("parent_chunk_id"),
+                    level=cd.get("level", 0),
+                )
+            )
         doc.chunks = doc_chunks
 
         # 5. Generate embeddings for all chunks
@@ -123,23 +123,28 @@ async def ingest_document(
         # 6. Prepare search documents with vectors
         search_docs = []
         for chunk, vector in zip(doc_chunks, vectors):
-            search_docs.append({
-                "id": chunk.id,
-                "chunk_id": chunk.id,
-                "document_id": chunk.document_id,
-                "content": chunk.content,
-                "content_vector": vector,
-                "chunk_index": chunk.chunk_index,
-                "strategy": chunk.strategy.value,
-                "metadata": chunk.metadata,
-            })
+            search_docs.append(
+                {
+                    "id": chunk.id,
+                    "chunk_id": chunk.id,
+                    "document_id": chunk.document_id,
+                    "content": chunk.content,
+                    "content_vector": vector,
+                    "chunk_index": chunk.chunk_index,
+                    "strategy": chunk.strategy.value,
+                    "metadata": chunk.metadata,
+                }
+            )
 
         # 7. Index in Azure AI Search
         indexed_count = search_svc.index_document_chunks(search_docs)
         doc.status = DocumentStatus.INDEXED
         logger.info(
             "Document '%s' ingested: %d chars, %d chunks, %d indexed",
-            document_id, len(raw_text), len(doc_chunks), indexed_count,
+            document_id,
+            len(raw_text),
+            len(doc_chunks),
+            indexed_count,
         )
 
     except Exception as e:

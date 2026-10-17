@@ -8,6 +8,7 @@ v1 for validation. It gives us runtime type checking, JSON Schema generation
 for OpenAPI docs, and serialisation/deserialisation out of the box.
 Dataclasses lack validation. TypedDicts are type-check-time only.
 """
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -15,7 +16,6 @@ from enum import Enum
 from typing import Any
 
 from pydantic import BaseModel, Field
-
 
 # ------------------------------------------------------------------
 # Enums — explicit state machines for the RAG pipeline
@@ -28,6 +28,7 @@ from pydantic import BaseModel, Field
 
 class ChunkingStrategy(str, Enum):
     """Supported text chunking strategies."""
+
     RECURSIVE = "recursive"
     SEMANTIC = "semantic"
     HIERARCHICAL = "hierarchical"
@@ -35,6 +36,7 @@ class ChunkingStrategy(str, Enum):
 
 class DocumentStatus(str, Enum):
     """Lifecycle state of a document in the pipeline."""
+
     PENDING = "pending"
     PROCESSING = "processing"
     INDEXED = "indexed"
@@ -43,6 +45,7 @@ class DocumentStatus(str, Enum):
 
 class RetrievalMode(str, Enum):
     """Search mode for document retrieval."""
+
     KEYWORD = "keyword"
     SEMANTIC = "semantic"
     HYBRID = "hybrid"
@@ -50,6 +53,7 @@ class RetrievalMode(str, Enum):
 
 class MessageRole(str, Enum):
     """Role of a message in a conversation."""
+
     USER = "user"
     ASSISTANT = "assistant"
     SYSTEM = "system"
@@ -68,6 +72,7 @@ class DocumentMetadata(BaseModel):
     document type, and date of publication — enabling filtered retrieval
     (e.g., "only Q3 earnings reports for MSFT").
     """
+
     filename: str = Field(..., description="Original filename")
     source: str = Field(default="upload", description="Source of the document")
     content_type: str = Field(default="application/octet-stream", description="MIME type")
@@ -77,13 +82,16 @@ class DocumentMetadata(BaseModel):
     created_at: datetime | None = Field(default=None, description="Document creation date")
     tickers: list[str] = Field(default_factory=list, description="Stock tickers mentioned")
     sectors: list[str] = Field(default_factory=list, description="Industry sectors")
-    doc_type: str | None = Field(default=None, description="Document type (report, filing, article)")
+    doc_type: str | None = Field(
+        default=None, description="Document type (report, filing, article)"
+    )
 
 
 class Document(BaseModel):
     """
     A document after ingestion and parsing.
     """
+
     id: str = Field(..., description="Unique document identifier")
     metadata: DocumentMetadata
     raw_text: str = Field(..., description="Full extracted text")
@@ -97,6 +105,7 @@ class DocumentChunk(BaseModel):
     """
     A single chunk of a document after splitting.
     """
+
     id: str = Field(..., description="Unique chunk identifier")
     document_id: str = Field(..., description="Parent document ID")
     content: str = Field(..., description="Chunk text content")
@@ -106,7 +115,9 @@ class DocumentChunk(BaseModel):
 
     # For hierarchical chunking: parent-child relationships
     parent_chunk_id: str | None = Field(default=None, description="Parent chunk ID (hierarchical)")
-    level: int = Field(default=0, description="Hierarchical level (0=section, 1=subsection, 2=paragraph)")
+    level: int = Field(
+        default=0, description="Hierarchical level (0=section, 1=subsection, 2=paragraph)"
+    )
 
 
 # ------------------------------------------------------------------
@@ -118,6 +129,7 @@ class EmbeddingVector(BaseModel):
     """
     A chunk with its embedding vector.
     """
+
     chunk_id: str = Field(..., description="Chunk identifier")
     vector: list[float] = Field(..., description="Embedding vector")
     model: str = Field(..., description="Embedding model name")
@@ -128,6 +140,7 @@ class SearchResult(BaseModel):
     """
     A single search result from Azure AI Search.
     """
+
     chunk_id: str
     document_id: str
     content: str
@@ -140,6 +153,7 @@ class RetrievalResult(BaseModel):
     """
     Complete retrieval result from a RAG query.
     """
+
     query: str
     results: list[SearchResult]
     total_count: int
@@ -157,6 +171,7 @@ class ChatMessage(BaseModel):
     """
     A message in the RAG chat conversation.
     """
+
     role: MessageRole
     content: str
     metadata: dict[str, Any] = Field(default_factory=dict)
@@ -166,6 +181,7 @@ class ChatRequest(BaseModel):
     """
     Request body for the RAG chat endpoint.
     """
+
     messages: list[ChatMessage] = Field(..., min_length=1, description="Conversation history")
     query: str = Field(..., description="The user's question")
     use_rag: bool = Field(default=True, description="Whether to use RAG retrieval")
@@ -180,6 +196,7 @@ class ChatResponse(BaseModel):
     """
     Response from the RAG chat endpoint (non-streaming).
     """
+
     answer: str
     sources: list[SearchResult] = Field(default_factory=list)
     retrieval_time_ms: float = 0.0
@@ -192,6 +209,7 @@ class IngestionResponse(BaseModel):
     """
     Response from the document ingestion endpoint.
     """
+
     document_id: str
     filename: str
     status: DocumentStatus
@@ -204,6 +222,7 @@ class HealthCheck(BaseModel):
     """
     Health check response.
     """
+
     status: str = "healthy"
     version: str = "1.0.0"
     services: dict[str, str] = Field(default_factory=dict)

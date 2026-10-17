@@ -14,19 +14,17 @@ That said, the pipeline is designed so any step can be replaced by a LangChain
 equivalent without changing the API. If we later need LangChain's document
 loaders or chain-of-thought prompting, swapping a service module is trivial.
 """
+
 from __future__ import annotations
 
 import logging
 import time
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
 from app.core import retrieval as retrieval_svc
 from app.models.schemas import (
-    ChatMessage,
     ChatRequest,
     ChatResponse,
-    RetrievalMode,
-    SearchResult,
 )
 from app.services import chat as chat_svc
 

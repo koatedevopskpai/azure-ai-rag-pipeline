@@ -17,10 +17,10 @@ dimensions). For a financial research RAG pipeline where retrieval accuracy
 directly impacts the quality of investment insights, the additional cost
 per token is justified.
 """
+
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 import numpy as np
 from openai import AzureOpenAI

@@ -20,6 +20,7 @@ configuration, no side effects. Pure functions are testable in isolation,
 composable (the output of one strategy feeds into another), and have
 zero overhead. Class-based chunkers would add abstraction without benefit.
 """
+
 from __future__ import annotations
 
 import re
@@ -69,11 +70,13 @@ def chunk_recursive(
     index = 0
     while remaining:
         if len(remaining) <= size:
-            chunks.append({
-                "content": remaining.strip(),
-                "chunk_index": index,
-                "strategy": ChunkingStrategy.RECURSIVE,
-            })
+            chunks.append(
+                {
+                    "content": remaining.strip(),
+                    "chunk_index": index,
+                    "strategy": ChunkingStrategy.RECURSIVE,
+                }
+            )
             break
 
         # Try each separator to find a good split point
@@ -89,11 +92,13 @@ def chunk_recursive(
 
         chunk_text = remaining[: split_at + 1].strip()
         if chunk_text:
-            chunks.append({
-                "content": chunk_text,
-                "chunk_index": index,
-                "strategy": ChunkingStrategy.RECURSIVE,
-            })
+            chunks.append(
+                {
+                    "content": chunk_text,
+                    "chunk_index": index,
+                    "strategy": ChunkingStrategy.RECURSIVE,
+                }
+            )
             index += 1
 
         # Advance by chunk_size - overlap for the next chunk
@@ -142,12 +147,14 @@ def chunk_semantic(
 
     chunks = []
     for i in range(0, len(sentences), sentences_per_chunk):
-        group = sentences[i: i + sentences_per_chunk]
-        chunks.append({
-            "content": " ".join(group),
-            "chunk_index": len(chunks),
-            "strategy": ChunkingStrategy.SEMANTIC,
-        })
+        group = sentences[i : i + sentences_per_chunk]
+        chunks.append(
+            {
+                "content": " ".join(group),
+                "chunk_index": len(chunks),
+                "strategy": ChunkingStrategy.SEMANTIC,
+            }
+        )
 
     return chunks
 
@@ -190,14 +197,11 @@ def chunk_hierarchical(
 
     chunks = []
     current_section_id = None
-    current_section_text = ""
-
     for i in range(0, len(sections) - 2, 2):
         level = len(sections[i])  # number of # characters
         heading = sections[i + 1].strip()
         content = sections[i + 2].strip() if i + 2 < len(sections) else ""
 
-        section_id = f"sec-{len(chunks)}"
         chunk = {
             "content": f"{'#' * level} {heading}\n\n{content}",
             "chunk_index": len(chunks),
@@ -214,7 +218,6 @@ def chunk_hierarchical(
 
         if level == 1:
             current_section_id = chunk.get("content", "")[:50]
-            current_section_text = ""
 
     return chunks
 
