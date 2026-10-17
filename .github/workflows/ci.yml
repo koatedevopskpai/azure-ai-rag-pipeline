@@ -39,7 +39,9 @@ jobs:
           python-version: "3.12"
           cache: "pip"
       - name: Install deps
-        run: pip install --no-cache-dir -r requirements.txt
+        run: |
+          pip install --no-cache-dir -r requirements.txt
+          pip install --no-cache-dir pytest
       - name: Run tests
         run: python -m pytest -v --tb=short -m "not integration"
 

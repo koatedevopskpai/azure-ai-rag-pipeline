@@ -18,6 +18,7 @@ predictable and testable. Each section is independently auditable for prompt
 injection vulnerabilities. A free-form prompt is harder to debug and
 maintain.
 """
+
 from __future__ import annotations
 
 import logging
@@ -25,11 +26,9 @@ import time
 from typing import Any
 
 from openai import AzureOpenAI
-from openai.types.chat import ChatCompletionChunk
-from openai import NOT_GIVEN
 
 from app.config import settings
-from app.models.schemas import ChatMessage, MessageRole, SearchResult
+from app.models.schemas import ChatMessage, SearchResult
 
 logger = logging.getLogger(__name__)
 

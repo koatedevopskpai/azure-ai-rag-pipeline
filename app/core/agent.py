@@ -23,6 +23,7 @@ This module provides:
 - `compare_documents`: Compare two documents and highlight differences
 - `extract_metrics`: Extract specific financial metrics from context
 """
+
 from __future__ import annotations
 
 import json
@@ -164,13 +165,16 @@ Decide which tools to call based on the user's request. You can call multiple to
     if message.tool_calls:
         for tc in message.tool_calls:
             args = json.loads(tc.function.arguments)
-            tool_calls.append({
-                "name": tc.function.name,
-                "arguments": args,
-            })
+            tool_calls.append(
+                {
+                    "name": tc.function.name,
+                    "arguments": args,
+                }
+            )
 
             if tc.function.name == "search_documents":
                 from app.core import retrieval as retrieval_svc
+
                 retrieval = retrieval_svc.retrieve(
                     query=args.get("query", query),
                     top_k=args.get("top_k", 10),

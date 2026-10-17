@@ -14,25 +14,23 @@ Why: Financial documents can be 50MB+ PDFs with embedded images. Base64
 encoding adds 33% overhead and prevents streaming uploads. Multipart uploads
 are the standard for file APIs and work with any HTTP client.
 """
+
 from __future__ import annotations
 
 import logging
-import tempfile
+from collections.abc import AsyncGenerator
 from pathlib import Path
-from typing import AsyncGenerator
 
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile
-from fastapi.responses import JSONResponse
 from sse_starlette.sse import EventSourceResponse
 
-from app.config import settings, UPLOAD_DIR
+from app.config import UPLOAD_DIR, settings
 from app.core import agent as agent_svc
 from app.core import rag as rag_svc
 from app.core import retrieval as retrieval_svc
 from app.models.schemas import (
     ChatRequest,
     ChatResponse,
-    HealthCheck,
     IngestionResponse,
     RetrievalMode,
     RetrievalResult,
@@ -88,7 +86,11 @@ async def ingest_document(
         )
 
     # Validate chunking strategy
-    strategy_map = {"recursive": "recursive", "semantic": "semantic", "hierarchical": "hierarchical"}
+    strategy_map = {
+        "recursive": "recursive",
+        "semantic": "semantic",
+        "hierarchical": "hierarchical",
+    }
     if chunking_strategy not in strategy_map:
         raise HTTPException(
             status_code=400,
@@ -115,7 +117,6 @@ async def ingest_document(
             chunking_strategy=ChunkingStrategy(chunking_strategy),
         )
 
-        status = doc.status.value
         message = f"Document '{file.filename}' ingested successfully with {len(doc.chunks)} chunks."
 
         if doc.status.value == "failed":
@@ -195,6 +196,7 @@ async def query_documents_stream(request: ChatRequest):
     send multiple requests over a single connection, which is not the case
     here (one query → one stream of tokens).
     """
+
     async def event_generator() -> AsyncGenerator[dict, None]:
         async for event in rag_svc.answer_question_stream(request):
             yield event
@@ -272,6 +274,7 @@ async def create_index():
     """Create or update the Azure AI Search index."""
     try:
         from app.services import search as search_svc
+
         search_svc.ensure_index()
         return {"status": "ok", "message": f"Index '{settings.AZURE_SEARCH_INDEX_NAME}' ready"}
     except Exception as e:

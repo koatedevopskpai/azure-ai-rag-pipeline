@@ -18,13 +18,13 @@ child chunk AND automatically injects the parent chunk content as context.
 This gives the LLM both the specific answer and the surrounding section
 context without increasing the top_k count.
 """
+
 from __future__ import annotations
 
 import logging
 import time
-from typing import Any
 
-from app.models.schemas import RetrievalMode, RetrievalResult, SearchResult
+from app.models.schemas import RetrievalMode, RetrievalResult
 from app.services import embedding as embedding_svc
 from app.services import search as search_svc
 

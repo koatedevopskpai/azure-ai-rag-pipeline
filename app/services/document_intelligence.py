@@ -18,6 +18,7 @@ service endpoint. Initialising at module import time would crash if the
 call to extract_text() raises a clear error telling the developer which
 env var is missing.
 """
+
 from __future__ import annotations
 
 import logging

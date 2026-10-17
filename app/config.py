@@ -17,6 +17,7 @@ clear error message that tells the developer exactly which env var is
 missing. This makes local development (without Azure) possible for
 testing non-Azure code paths.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -44,7 +45,7 @@ class Settings(BaseSettings):
     # Application
     # ------------------------------------------------------------------
     APP_NAME: str = "azure-ai-rag-pipeline"
-    APP_ENV: Literal["development", "staging", "production"] = "development"
+    APP_ENV: Literal["development", "staging", "ci", "production"] = "development"
     APP_LOG_LEVEL: str = "INFO"
     APP_MAX_UPLOAD_SIZE_MB: int = 50
     APP_CORS_ORIGINS: str = "*"
