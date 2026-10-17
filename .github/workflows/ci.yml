@@ -47,6 +47,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint, test]
     if: github.ref == 'refs/heads/main'
+    # The default GITHUB_TOKEN is read-only, so the push to ghcr.io failed with
+    # "denied: installation not allowed to Create organization package".
+    # Least privilege: read the repo, write packages. That is all this job needs.
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
       - name: Set up Docker Buildx
