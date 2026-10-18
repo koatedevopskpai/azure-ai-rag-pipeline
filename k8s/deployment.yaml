@@ -51,7 +51,7 @@ spec:
       serviceAccountName: azure-ai-rag-pipeline-sa
       containers:
         - name: api
-          image: ghcr.io/koate-kpai/azure-ai-rag-pipeline:latest
+          image: ghcr.io/koatedevopskpai/azure-ai-rag-pipeline:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
