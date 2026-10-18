@@ -1,6 +1,6 @@
 # Azure AI RAG Pipeline
 
-> Production-grade financial research RAG (Retrieval-Augmented Generation) pipeline using Azure AI services. Ingest financial documents, chunk with multiple strategies, embed with Azure OpenAI, index in Azure AI Search with hybrid retrieval, and query with streaming SSE responses.
+> A financial research RAG (Retrieval-Augmented Generation) reference pipeline using Azure AI services. Ingest financial documents, chunk with multiple strategies, embed with Azure OpenAI, index in Azure AI Search with hybrid retrieval, and query with streaming SSE responses.
 
 ---
 
@@ -81,7 +81,7 @@
 
 ```bash
 # 1. Clone
-git clone https://github.com/koate-kpai/azure-ai-rag-pipeline.git
+git clone https://github.com/koatedevopskpai/azure-ai-rag-pipeline.git
 cd azure-ai-rag-pipeline
 
 # 2. Virtual environment
@@ -291,8 +291,7 @@ kubectl apply -f k8s/
 
 ## Related Projects
 
-- [gcp-data-pipeline](https://github.com/koate-kpai/gcp-data-pipeline) — Serverless GCP-native ETL pipeline (Cloud Storage → Cloud Function → BigQuery)
-- [data-pipeline-engine](https://github.com/koate-kpai/data-pipeline-engine) — Modular ETL framework with FastAPI serving
-- [pipeline-dashboard](https://github.com/koate-kpai/pipeline-dashboard) — Django full-stack dashboard for pipeline analytics
-- [rag-pipeline-backend](https://github.com/koate-kpai/rag-pipeline-backend) — Original RAG pipeline (predecessor to this Azure-native version)
-- [ai-agent-engineer](https://github.com/koate-kpai/ai-agent-engineer) — Multi-agent AI platform with LangGraph
+- [gcp-data-pipeline](https://github.com/koatedevopskpai/gcp-data-pipeline) — Serverless GCP-native ETL pipeline (Cloud Storage → Cloud Function → BigQuery)
+- [data-pipeline-engine](https://github.com/koatedevopskpai/data-pipeline-engine) — Modular ETL framework with FastAPI serving
+- [pipeline-dashboard](https://github.com/koatedevopskpai/pipeline-dashboard) — Django full-stack dashboard for pipeline analytics
+- [rag-pipeline-backend](https://github.com/koatedevopskpai/rag-pipeline-backend) — Original RAG pipeline (predecessor to this Azure-native version)
